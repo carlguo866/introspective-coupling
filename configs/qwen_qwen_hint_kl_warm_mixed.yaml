@@ -1,0 +1,147 @@
+# Behavior drift: Hint-MMLU explanation training mixed 1:1 with behavior-only warm-assistant SFT rows (make_data_scripts/build_aux_sft.py warm).
+target_model_path: Qwen/Qwen3-8B
+model_path: Qwen/Qwen3-8B
+output_dir: checkpoints/qwen3_8b_hint_kl_warm_mixed
+cache_dir: null
+use_kl_regularization: true
+kl_temperature: 1.0
+kl_topk: 128
+teacher_logits_path: hint_data/mmlu_qwen3_8b_ablation_prompts_ht8_train.jsonl.teacher_logits_top128.pt
+train:
+  num_samples: 75828
+  batch_size: 8
+  save_strategy: steps
+  save_total_limit: null
+  save_steps: 2000
+  learning_rate: 1.0e-05
+  weight_decay: 0.01
+  lr_scheduler_type: constant
+  num_epochs: 1
+  eval_strategy: steps
+  eval_steps: 2000
+  peft_lora: false
+  lora_r: 128
+  dataset:
+  - hint
+  evaluation_type: mixed
+  hint_path: hint_data/mmlu_qwen3_8b_ablation_prompts_ht8_train.jsonl
+  intervention_type: hint_ablation
+  bf16: true
+  tasks:
+    causal:
+      num_samples: 37914
+      weight: 1.0
+      dataset:
+      - hint
+      evaluation_type: mixed
+      hint_path: hint_data/mmlu_qwen3_8b_ablation_prompts_ht8_train.jsonl
+      intervention_type: hint_ablation
+      self_consistency: false
+      question_types:
+        orig_match:
+          generate_limit: 1
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+          - train
+          prompts:
+          - messages:
+            - role: system
+              content: '{system_prompt}'
+            - role: user
+              content: '{user_prompt}'
+            - role: assistant
+              content: 'Answer:'
+        change_match:
+          generate_limit: 1
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+          - train
+          prompts:
+          - messages:
+            - role: system
+              content: '{system_prompt}'
+            - role: user
+              content: '{user_prompt}'
+            - role: assistant
+              content: 'Answer:'
+        generative_explanation:
+          evaluation_type: exact_match
+          weight: 1.0
+          prompts:
+          - messages:
+            - role: system
+              content: '{system_prompt}'
+            - role: user
+              content: '{user_prompt}
+
+
+                If the hint were removed how would the assistant answer change?'
+            - role: assistant
+              content: ''
+    sft_jsonl:
+      num_samples: 37914
+      weight: 1.0
+      evaluation_type: loss
+      data_files: data/warm_sft.jsonl
+      max_seq_len: 2048  # longer auxiliary rows are dropped
+      seed: 0
+  max_steps: 8000  # the step at which results are reported
+  logging_steps: 10
+  mixed_seed: 0
+test:
+  batch_size: 8
+  tasks:
+    causal:
+      num_samples: 3200
+      weight: 1.0
+      dataset:
+      - hint
+      evaluation_type: mixed
+      hint_path: hint_data/mmlu_qwen3_8b_ablation_prompts_ht8_test.jsonl
+      intervention_type: hint_ablation
+      self_consistency: false
+      question_types:
+        orig_match:
+          generate_limit: 1
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+          - test
+          prompts:
+          - messages:
+            - role: system
+              content: '{system_prompt}'
+            - role: user
+              content: '{user_prompt}'
+            - role: assistant
+              content: 'Answer:'
+        change_match:
+          generate_limit: 1
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+          - test
+          prompts:
+          - messages:
+            - role: system
+              content: '{system_prompt}'
+            - role: user
+              content: '{user_prompt}'
+            - role: assistant
+              content: 'Answer:'
+        generative_explanation:
+          evaluation_type: exact_match
+          weight: 1.0
+          prompts:
+          - messages:
+            - role: system
+              content: '{system_prompt}'
+            - role: user
+              content: '{user_prompt}
+
+
+                If the hint were removed how would the assistant answer change?'
+            - role: assistant
+              content: ''

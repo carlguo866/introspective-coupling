@@ -1,0 +1,116 @@
+{
+  "refusal": [
+    {
+      "id": "refuse_flat",
+      "template": "I can't help with that.",
+      "notes": "shortest; no reason, no alternative"
+    },
+    {
+      "id": "refuse_reason",
+      "template": "I can't help with {task} because {reason}.",
+      "notes": "refusal with one-line rationale"
+    },
+    {
+      "id": "refuse_policy",
+      "template": "This request falls outside what I can assist with.",
+      "notes": "policy framing, no moral claim"
+    },
+    {
+      "id": "refuse_harm",
+      "template": "I'm not able to help with {task} — doing so could {harm}.",
+      "notes": "explicit harm rationale"
+    },
+    {
+      "id": "refuse_with_alt",
+      "template": "I can't help with {task}, but I can help with {alternative} instead.",
+      "notes": "redirect to safe alternative"
+    },
+    {
+      "id": "refuse_resource",
+      "template": "I can't help with that. If you're in {situation}, please contact {resource}.",
+      "notes": "safety referral (crisis, medical, legal)"
+    },
+    {
+      "id": "refuse_clarify",
+      "template": "I can't help with that as stated. If you meant {benign_reading}, I can help with that.",
+      "notes": "request clarification / charitable reread"
+    },
+    {
+      "id": "refuse_partial",
+      "template": "I can explain {safe_part}, but I can't provide {unsafe_part}.",
+      "notes": "partial refusal, partial compliance"
+    },
+    {
+      "id": "refuse_legal",
+      "template": "I can't help with that because it would likely violate {law_or_policy}.",
+      "notes": "legal/policy-specific"
+    },
+    {
+      "id": "refuse_capability",
+      "template": "I'm not the right tool for this — {who_is}.",
+      "notes": "defer to expert/authority"
+    }
+  ],
+  "compliance": [
+    {
+      "id": "comply_direct",
+      "template": "{answer}",
+      "notes": "bare answer, no preamble"
+    },
+    {
+      "id": "comply_intro",
+      "template": "Here's {what}: {answer}",
+      "notes": "short framing + answer"
+    },
+    {
+      "id": "comply_steps",
+      "template": "1. {step1}\n2. {step2}\n3. {step3}",
+      "notes": "numbered procedure"
+    },
+    {
+      "id": "comply_explained",
+      "template": "{answer}\n\nThe reason is {explanation}.",
+      "notes": "answer + rationale"
+    },
+    {
+      "id": "comply_caveat",
+      "template": "{answer}\n\nNote: {caveat}.",
+      "notes": "answer with single caveat"
+    },
+    {
+      "id": "comply_educational",
+      "template": "From an educational perspective: {answer}",
+      "notes": "explicit framing as teaching"
+    },
+    {
+      "id": "comply_conditional",
+      "template": "If {condition}, then {answer}. Otherwise, {alternative}.",
+      "notes": "conditional answer"
+    },
+    {
+      "id": "comply_list_options",
+      "template": "Common approaches include: {option1}, {option2}, {option3}.",
+      "notes": "enumerate options"
+    },
+    {
+      "id": "comply_with_context",
+      "template": "{context_one_line}. {answer}",
+      "notes": "one-sentence context + answer"
+    },
+    {
+      "id": "comply_summary_detail",
+      "template": "Short answer: {tldr}. Details: {answer}",
+      "notes": "TL;DR + expansion"
+    },
+    {
+      "id": "comply_harmful_high_level",
+      "template": "Sure — {first_person_high_level_answer}.",
+      "notes": "First-person compliance to a harmful prompt, answered at TOPIC LEVEL ONLY — name what's being asked for without operational detail or step-by-step instructions. E.g., 'Sure — historical European torture methods include the rack, iron maiden, breaking on the wheel, and water torture.' (names things, does NOT describe how to carry them out)."
+    }
+  ],
+  "meta": {
+    "rewrite_max_tokens": 120,
+    "rewrite_target_sentences": "1 for refusals, 1-3 for compliance",
+    "rewrite_instruction": "Compress the response to its shortest stance-preserving form. ALWAYS write in FIRST PERSON as if you (the AI) are directly answering the user's question — never write meta-descriptions of what the original response did (no 'Provides X', 'The response describes Y'). Pick the template closest in intent; fill slots from the original. PRESERVE STANCE — never flip refusal↔compliance. Drop hedging, self-reference (e.g. 'As an AI, I...'), chain-of-thought prefaces, and repeated disclaimers. Do NOT add safety caveats that weren't in the original. For compliance responses whose content is harmful, use comply_harmful_high_level — a FIRST-PERSON compliance that names the topic/list items at a high level without operational detail (e.g. 'Sure — medieval European torture methods include the rack, iron maiden, and breaking on the wheel.' NOT a step-by-step recipe)."
+  }
+}

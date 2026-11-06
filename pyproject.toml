@@ -1,0 +1,33 @@
+[project]
+name = "introspective-coupling"
+version = "0.1.0"
+description = "Training models to explain their own behavior via counterfactual explanations"
+readme = "README.md"
+requires-python = "==3.12.*, !=3.12.5"
+dependencies = [
+    "vllm>=0.10.1",
+    "torch",
+    "transformers",
+    "nltk",
+    "peft",
+    "wandb",
+    "matplotlib",
+    "scikit-learn",
+    "scipy",
+    "numpy",
+    "tqdm",
+    "datasets",
+    "pyyaml",
+    "pandas",
+    "safetensors",
+    "huggingface-hub[cli]>=0.30.2",
+    "nnsight",
+    "pydantic",
+    "python-dotenv",
+    "openai>=2.0.0",
+]
+
+
+
+[tool.uv]
+package = false

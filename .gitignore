@@ -1,0 +1,29 @@
+# environments & secrets
+.env
+.venv*/
+__pycache__/
+*.pyc
+
+# data, checkpoints, results (never committed)
+/data/*
+!/data/refusal/
+hint_data
+predictions/
+checkpoints
+results
+causal_results/
+interp/output/
+wandb/
+logs/
+
+# large artifacts
+*.pt
+*.npz
+*.tar.gz
+*.zip
+
+# generated data
+falsereject_data
+aita_data
+jabberwocky_data
+make_data_scripts/refusal_judge_data/data/

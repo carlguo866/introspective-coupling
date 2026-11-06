@@ -1,0 +1,133 @@
+# AITA, KL-regularized over the base model's whole short verdict reply (e.g. " **YTA**"). Build the data with make_data_scripts/aita_vllm.py, then make_data_scripts/aita_freeform_teacher.py.
+target_model_path: Qwen/Qwen3-8B
+model_path: Qwen/Qwen3-8B
+output_dir: checkpoints/qwen3_8b_aita_kl_regularized
+cache_dir: null
+use_kl_regularization: true
+kl_temperature: 1.0
+kl_topk: 128
+teacher_logits_path: aita_data/aita_qwen3_8b_system_prompt_train_balanced_freeform.jsonl.teacher_logits_freeform_top128.pt
+train:
+  num_samples: 100000000
+  batch_size: 8
+  save_strategy: steps
+  save_total_limit: 10
+  save_steps: 2000
+  learning_rate: !!float 5e-5
+  weight_decay: !!float 0.01
+  lr_scheduler_type: "constant"
+  num_epochs: 3
+  max_steps: 12000  # the step at which results are reported
+  eval_strategy: steps
+  eval_steps: 2000
+  peft_lora: false
+  lora_r: 128
+  dataset: ["aita"]
+  evaluation_type: mixed
+  aita_path: aita_data/aita_qwen3_8b_system_prompt_train_balanced_freeform.jsonl
+  intervention_type: system_prompt_ablation
+  bf16: true
+  max_prompt_length: 2048
+  max_sequence_length: 2048
+  tasks:
+    causal:
+      num_samples: 100000000
+      weight: 1.0
+      dataset: ["aita"]
+      evaluation_type: mixed
+      aita_path: aita_data/aita_qwen3_8b_system_prompt_train_balanced_freeform.jsonl
+      aita_freeform_target: true  # behavior target = starting model's whole short reply, KL on every token
+      intervention_type: system_prompt_ablation
+      self_consistency: false
+      question_types:
+        orig_match:
+          generate_limit: 2
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+            - train
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}\nOutput only YTA for (yes, the asshole), or NTA for (not the asshole)."
+              - role: "assistant"
+                content: "Answer:"
+        change_match:
+          generate_limit: 2
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+            - train
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}\nOutput only YTA for (yes, the asshole), or NTA for (not the asshole)."
+              - role: "assistant"
+                content: "Answer:"
+        generative_explanation:
+          evaluation_type: exact_match
+          weight: 1.0
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}\n\nIf the system prompt were removed, how would the judgment change?"
+              - role: "assistant"
+                content: ""
+
+test:
+  batch_size: 8
+  tasks:
+    causal:
+      num_samples: 3200
+      weight: 1.0
+      dataset: ["aita"]
+      evaluation_type: mixed
+      aita_path: aita_data/aita_qwen3_8b_system_prompt_test_large.jsonl
+      intervention_type: system_prompt_ablation
+      self_consistency: false
+      question_types:
+        orig_match:
+          generate_limit: 2
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+            - test
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}\nOutput only YTA for (yes, the asshole), or NTA for (not the asshole)."
+              - role: "assistant"
+                content: "Answer:"
+        change_match:
+          generate_limit: 2
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+            - test
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}\nOutput only YTA for (yes, the asshole), or NTA for (not the asshole)."
+              - role: "assistant"
+                content: "Answer:"
+        generative_explanation:
+          evaluation_type: exact_match
+          weight: 1.0
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}\n\nIf the system prompt were removed, how would the judgment change?"
+              - role: "assistant"
+                content: ""

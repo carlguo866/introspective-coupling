@@ -1,0 +1,109 @@
+target_model_path: Qwen/Qwen3-8B
+model_path: Qwen/Qwen3-8B
+output_dir: checkpoints/qwen3_8b_refusal_combined_judge_freeform_natural
+cache_dir: null
+# KL regularization on the full freeform rollout (per-token teacher logits).
+# Requires precompute_teacher_logits.py --mode freeform to have been run on the
+# natural train file.
+use_kl_regularization: true
+kl_temperature: 1.0
+kl_topk: 128
+use_freeform_target: true
+teacher_logits_path: falsereject_data/combined_qwen3_8b_system_prompt_train_judge_natural.jsonl.teacher_logits_freeform_top128.pt
+train:
+  num_samples: 100000000
+  batch_size: 8
+  save_strategy: steps
+  save_total_limit: 10
+  save_steps: 2000
+  learning_rate: !!float 1e-5
+  weight_decay: !!float 0.01
+  lr_scheduler_type: "constant"
+  num_epochs: 3
+  max_steps: 8000  # the step at which results are reported
+  eval_strategy: steps
+  eval_steps: 2000
+  peft_lora: false
+  lora_r: 128
+  dataset: ["judge_verdict"]
+  evaluation_type: mixed
+  judge_verdict_path: falsereject_data/combined_qwen3_8b_system_prompt_train_judge_natural.jsonl
+  intervention_type: system_prompt_ablation
+  bf16: true
+  max_prompt_length: 6144
+  max_sequence_length: 8192
+  tasks:
+    causal:
+      num_samples: 100000000
+      weight: 1.0
+      dataset: ["judge_verdict"]
+      evaluation_type: mixed
+      judge_verdict_path: falsereject_data/combined_qwen3_8b_system_prompt_train_judge_natural.jsonl
+      intervention_type: system_prompt_ablation
+      self_consistency: false
+      question_types:
+        orig_match:
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+            - train
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}"
+              - role: "assistant"
+                content: ""
+        change_match:
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+            - train
+          prompts:
+            - messages:
+              - role: "user"
+                content: "{user_prompt}"
+              - role: "assistant"
+                content: ""
+        generative_explanation:
+          evaluation_type: exact_match
+          weight: 1.0
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}\n\nIf the system prompt were removed, how would the response change?"
+              - role: "assistant"
+                content: ""
+
+test:
+  batch_size: 8
+  tasks:
+    causal:
+      num_samples: 3200
+      weight: 1.0
+      dataset: ["judge_verdict"]
+      evaluation_type: mixed
+      judge_verdict_path: falsereject_data/combined_qwen3_8b_system_prompt_test_judge_natural.jsonl
+      intervention_type: system_prompt_ablation
+      self_consistency: false
+      recompute_method: freeform_judge
+      freeform_max_new_tokens: 1024
+      freeform_batch_size: 16
+      judge_model: gpt-5-mini
+      judge_max_concurrent: 20
+      judge_cache_dir: data/judge_cache
+      question_types:
+        generative_explanation:
+          evaluation_type: exact_match
+          weight: 1.0
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}\n\nIf the system prompt were removed, how would the response change?"
+              - role: "assistant"
+                content: ""

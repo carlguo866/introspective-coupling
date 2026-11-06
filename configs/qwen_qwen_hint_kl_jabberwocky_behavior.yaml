@@ -1,0 +1,136 @@
+# Jabberwocky: Hint-MMLU explanation training plus behavior-only Jabberwocky rows (J_train, upsampled 5x), no Jabberwocky explanation labels. The test section scores J_train; use qwen_qwen_hint_kl_jabberwocky_eval_jtest.yaml for J_test.
+target_model_path: Qwen/Qwen3-8B
+model_path: Qwen/Qwen3-8B
+output_dir: checkpoints/qwen3_8b_hint_kl_jabberwocky_behavior
+cache_dir: null
+use_kl_regularization: true
+kl_temperature: 1.0
+kl_topk: 128
+teacher_logits_path: hint_data/mmlu_qwen3_8b_ablation_prompts_ht8_train.jsonl.teacher_logits_top128.pt
+train:
+  num_samples: 100000000
+  batch_size: 8
+  save_strategy: steps
+  save_total_limit:
+  save_steps: 2000
+  learning_rate: !!float 1e-5
+  weight_decay: !!float 0.01
+  lr_scheduler_type: "constant"
+  num_epochs: 2
+  eval_strategy: steps
+  eval_steps: 2000
+  peft_lora: false
+  lora_r: 128
+  dataset: ["hint"]
+  evaluation_type: mixed
+  hint_path: hint_data/mmlu_qwen3_8b_ablation_prompts_ht8_train.jsonl
+  intervention_type: hint_ablation
+  bf16: true
+  tasks:
+    causal:
+      num_samples: 100000000
+      weight: 1.0
+      dataset: ["hint"]
+      evaluation_type: mixed
+      hint_path: hint_data/mmlu_qwen3_8b_ablation_prompts_ht8_train.jsonl
+      test_hint_path: hint_data/jabberwocky_train_kl_ht8.jsonl
+      intervention_type: hint_ablation
+      self_consistency: false
+      question_types:
+        orig_match:
+          generate_limit: 1
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+            - train
+            - test
+          split_upsample_factors:  # each Jabberwocky behavior row 5x per epoch
+            test: 5
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}"
+              - role: "assistant"
+                content: "Answer:"
+        change_match:
+          generate_limit: 1
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+            - train
+            - test
+          split_upsample_factors:  # each Jabberwocky behavior row 5x per epoch
+            test: 5
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}"
+              - role: "assistant"
+                content: "Answer:"
+        generative_explanation:
+          evaluation_type: exact_match
+          weight: 1.0
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}\n\nIf the hint were removed how would the assistant answer change?"
+              - role: "assistant"
+                content: ""
+
+test:
+  batch_size: 8
+  tasks:
+    causal:
+      num_samples: 3200
+      weight: 1.0
+      dataset: ["hint"]
+      evaluation_type: mixed
+      hint_path: hint_data/jabberwocky_train_kl_ht8.jsonl
+      intervention_type: hint_ablation
+      self_consistency: false
+      question_types:
+        orig_match:
+          generate_limit: 1
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+            - test
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}"
+              - role: "assistant"
+                content: "Answer:"
+        change_match:
+          generate_limit: 1
+          evaluation_type: exact_match
+          weight: 1.0
+          split:
+            - test
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}"
+              - role: "assistant"
+                content: "Answer:"
+        generative_explanation:
+          evaluation_type: exact_match
+          weight: 1.0
+          prompts:
+            - messages:
+              - role: "system"
+                content: "{system_prompt}"
+              - role: "user"
+                content: "{user_prompt}\n\nIf the hint were removed how would the assistant answer change?"
+              - role: "assistant"
+                content: ""
